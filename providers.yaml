@@ -1,0 +1,13 @@
+# providers.yaml
+providers:
+  - name: anthropic
+    root_urls:
+      - "https://docs.anthropic.com/en/docs"
+      - "https://docs.anthropic.com/en/api"
+      
+    include_only_paths:
+      - "en/docs/.+"
+      - "/en/api/.+"
+    exclude_paths: []
+    model_names_path: "https://docs.anthropic.com/en/docs/about-claude/models/all-models"
+    model_params_path: ??? 
