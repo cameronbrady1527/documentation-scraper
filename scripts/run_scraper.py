@@ -5,11 +5,18 @@ import argparse
 import datetime
 from pathlib import Path
 from typing import Dict, List, Any, Optional
+import os
+from dotenv import load_dotenv
+import yaml  # For parsing providers.yaml
 
 # Import the Firecrawl SDK
 from firecrawl import FirecrawlApp
 
 class FirecrawlMarkdownScraper:
+
+    # Maximum number of pages to crawl
+    MAX_PAGES = 5
+
     def __init__(
         self, 
         api_key: str,
@@ -75,8 +82,6 @@ class FirecrawlMarkdownScraper:
         Returns:
             Properly formatted markdown
         """
-        # Handle potential single-line content
-        
         # Add line breaks before headers
         for i in range(6, 0, -1):
             header_marker = '#' * i
@@ -98,7 +103,7 @@ class FirecrawlMarkdownScraper:
             
         return content
     
-    def scrape_url(self, url: str, max_pages: int = 100, wait_time: int = 10) -> Dict[str, Any]:
+    def scrape_url(self, url: str, max_pages: int = MAX_PAGES, wait_time: int = 10) -> Dict[str, Any]:
         """
         Scrape a URL using Firecrawl and wait for the result.
         
@@ -242,7 +247,7 @@ class FirecrawlMarkdownScraper:
         print(f"Created index at: {index_path}")
         return index_path
         
-    def run(self, url: str, max_pages: int = 100) -> List[Path]:
+    def run(self, url: str, max_pages: int = MAX_PAGES) -> List[Path]:
         """
         Run the complete scrape process.
         
@@ -265,7 +270,7 @@ class FirecrawlMarkdownScraper:
             saved_files = []
             pages = result.get('pages', [])
             
-            print(f"Processing {len(pages)} pages...")
+            print(f"Processing {len(pages)} pages from {url}...")
             for page in pages:
                 try:
                     filepath = self.save_page_as_markdown(page)
@@ -277,13 +282,13 @@ class FirecrawlMarkdownScraper:
             if saved_files:
                 self.create_index(saved_files)
             
-            print(f"\nScrape completed successfully!")
+            print(f"\nScrape completed successfully for {url}!")
             print(f"Saved {len(saved_files)} pages to {self.session_dir}")
             
             return saved_files
             
         except Exception as e:
-            print(f"Error during scrape: {e}")
+            print(f"Error during scrape of {url}: {e}")
             
             # Save error information
             with open(self.session_dir / "ERROR.txt", "w") as f:
@@ -293,20 +298,48 @@ class FirecrawlMarkdownScraper:
             return []
 
 def main():
-    parser = argparse.ArgumentParser(description="Scrape a URL and save pages as markdown files")
-    parser.add_argument("--api-key", required=True, help="Your Firecrawl API key")
-    parser.add_argument("--url", required=True, help="URL to scrape")
+    # Load environment variables from .env
+    load_dotenv()
+    
+    # Retrieve API key from .env
+    API_KEY = os.getenv("FIRECRAWL_API_KEY")
+    if not API_KEY:
+        raise ValueError("API Key not found. Please set it in the .env file.")
+    
+    parser = argparse.ArgumentParser(description="Scrape URLs and save pages as markdown files")
     parser.add_argument("--output-dir", default="../src/storage/scraped_docs", help="Directory to save markdown files")
-    parser.add_argument("--max-pages", type=int, default=5, help="Maximum number of pages to scrape")
+    # parser.add_argument("--max-pages", type=int, default=5, help="Maximum number of pages to scrape")
     
     args = parser.parse_args()
     
+    # Read the providers.yaml file (relative path: ../providers.yaml)
+    providers_file = Path("../providers.yaml")
+    if not providers_file.exists():
+        print("Error: providers.yaml file not found at ../providers.yaml")
+        exit(1)
+        
+    with open(providers_file, "r") as f:
+        providers_config = yaml.safe_load(f)
+    
+    # Collect all URLs from the providers file
+    urls = []
+    for provider in providers_config.get("providers", []):
+        urls.extend(provider.get("root_urls", []))
+    
+    if not urls:
+        print("Error: No URLs found in providers.yaml")
+        exit(1)
+    
+    # Initialize the scraper with the API key and output directory
     scraper = FirecrawlMarkdownScraper(
-        api_key=args.api_key,
+        api_key=API_KEY,
         output_dir=args.output_dir
     )
     
-    scraper.run(args.url, args.max_pages)
+    # Loop over each URL and run the scraper
+    for url in urls:
+        print(f"\n--- Scraping URL: {url} ---")
+        scraper.run(url)
 
 if __name__ == "__main__":
     main()
