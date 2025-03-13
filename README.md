@@ -21,7 +21,7 @@ Firecrawl Documentation Scraper is a specialized tool that combines website craw
 To use this toolkit, install the required dependencies:
 
 ```bash
-uv pip install firecrawl
+uv pip install firecrawl python-dotenv pyyaml
 ```
 
 ## Usage
@@ -31,16 +31,36 @@ uv pip install firecrawl
 The crawler systematically explores websites following specified path patterns:
 
 ```bash
-python run_crawler.py --api-key YOUR_API_KEY --url https://docs.anthropic.com --paths "/claude/docs/.+" "/claude/reference/.+" --output-dir anthropic_docs --max-pages 100
+python run_crawler.py --api-key YOUR_API_KEY --url https://docs.anthropic.com --paths "/claude/docs/.+" "/claude/reference/.+" --output-dir anthropic_docs --max-pages 5
 ```
 
 ### Scraper Mode
 
-The scraper targets specific URLs and extracts their content:
+The scraper now loads its API key from a `.env` file at the root of the project and reads one or more URLs from the `providers.yaml` file (located at `../providers.yaml`). It then loops through all the URLs to scrape their content.
+
+Ensure your `.env` file contains your API key as follows:
+```bash
+FIRECRAWL_API_KEY=your_api_key_here
+```
+And your `providers.yaml` file defines one or more providers and their corresponding URLs:
+```yaml
+providers:
+  - name: anthropic
+    root_urls:
+      - "https://docs.anthropic.com/en/docs"
+      - "https://docs.anthropic.com/en/api"
+    ...
+```
+Run the scraper with:
 
 ```bash
-python run_scraper.py --api-key YOUR_API_KEY --url https://docs.anthropic.com --output-dir anthropic_docs --max-pages 5
+python run_scraper.py --output-dir anthropic_docs --max-pages 5
 ```
+> **Note:**  
+> - The API key is now loaded from the `.env` file. Do not pass it as a command-line argument.  
+> - The URL(s) to scrape are read from the `providers.yaml` file. The scraper loops over all URLs provided.  
+> - The default output directory is `../src/storage/scraped_docs`, but you can override it with `--output-dir`.
+
 
 ### Arguments
 
@@ -52,8 +72,8 @@ python run_scraper.py --api-key YOUR_API_KEY --url https://docs.anthropic.com --
 - `--max-pages` (optional, default: `100`): Maximum pages to crawl
 
 #### Scraper Arguments
-- `--api-key` (required): Your Firecrawl API key
-- `--url` (required): URL to scrape
+**API Key**: Now loaded from the `.env` file (set `FIRECRAWL_API_KEY` in the file).
+- **URLs**: Read from `providers.yaml` (located at `../providers.yaml`), allowing multiple URLs to be processed.
 - `--output-dir` (optional, default: `../src/storage/scraped_docs`): Directory for output
 - `--max-pages` (optional, default: `5`): Maximum pages to scrape
 
@@ -68,10 +88,10 @@ python run_scraper.py --api-key YOUR_API_KEY --url https://docs.anthropic.com --
 6. Generates an index of all extracted documents
 
 ### Scraper Process
-1. Initializes the Firecrawl SDK with your API key
-2. Creates a timestamped session directory
-3. Submits the target URL for scraping
-4. Monitors progress until completion
+1. Loads the API key from the `.env` file
+2. Reads one or more target URLs from `providers.yaml`
+3. Creates a timestamped session directory for each scrape operation
+4. Submits each URL for scraping and monitors progress until completion
 5. Processes each page and formats content as markdown
 6. Creates an index linking to all scraped content
 
@@ -114,7 +134,7 @@ Both tools apply formatting rules to ensure proper markdown structure:
 ## Choosing Between Crawler and Scraper
 
 - **Use the crawler** when you need to extract documentation from multiple pages following specific patterns
-- **Use the scraper** when targeting specific URLs or smaller documentation sets
+- **Use the scraper** when targeting specific URLs or smaller documentation sets. The updated scraper now supports multiple URLs from `providers.yaml` and automatically loads your API key from the `.env` file.
 
 ## License
 
