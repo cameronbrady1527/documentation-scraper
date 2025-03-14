@@ -115,7 +115,7 @@ class FirecrawlMarkdownScraper:
         # Configure scrape parameters
         params = {
             'formats': self.formats,
-            'maxPages': max_pages
+            # 'maxPages': max_pages
         }
         
         # Start the scrape
@@ -125,7 +125,7 @@ class FirecrawlMarkdownScraper:
         config = {
             'url': url,
             'scrape_id': scrape_id,
-            'max_pages': max_pages,
+            # 'max_pages': max_pages,
             'formats': self.formats,
             'timestamp': datetime.datetime.now(datetime.timezone.utc).isoformat()
         }
