@@ -7,7 +7,7 @@ from typing import List
 
 class FirecrawlMarkdownScraper:
 
-    MAX_PAGES = 5
+    MAX_PAGES = 25
 
     def __init__(
             self,
@@ -28,7 +28,8 @@ class FirecrawlMarkdownScraper:
             # file example: scrape_20250312_043242
         directory = self.output_dir
         timestamp = datetime.datetime.now(datetime.timezone.utc).isoformat()[:-6].replace(':', '.')
-        filename = Path(timestamp)
+        filename = Path(f"anthropic-api-{url[34:]}.md")
+        # filename = Path(f"{timestamp}.md")
         filepath = directory / filename
 
         # Create the directory if it doesn't exist
@@ -62,10 +63,27 @@ def main():
     
     # Hardcoded list of URLs to scrape
     urls = [
-        "https://docs.anthropic.com/en/home",
+        "https://docs.anthropic.com/en/api/claude-on-amazon-bedrock",
+        "https://docs.anthropic.com/en/api/claude-on-vertex-ai",
+        "https://docs.anthropic.com/en/api/client-sdks",
+        "https://docs.anthropic.com/en/api/complete",
+        "https://docs.anthropic.com/en/api/errors",
+        "https://docs.anthropic.com/en/api/getting-help",
         "https://docs.anthropic.com/en/api/getting-started",
-        "https://docs.anthropic.com/en/prompt-library/library",
-        "https://docs.anthropic.com/en/docs/about-claude/use-case-guides/overview"
+        "https://docs.anthropic.com/en/api/ip-addresses",
+        "https://docs.anthropic.com/en/api/messages",
+        "https://docs.anthropic.com/en/api/messages-count-tokens",
+        "https://docs.anthropic.com/en/api/messages-examples",
+        "https://docs.anthropic.com/en/api/messages-streaming",
+        "https://docs.anthropic.com/en/api/migrating-from-text-completions-to-messages",
+        "https://docs.anthropic.com/en/api/models",
+        "https://docs.anthropic.com/en/api/models-list",
+        "https://docs.anthropic.com/en/api/openai-sdk",
+        "https://docs.anthropic.com/en/api/prompt-validation",
+        "https://docs.anthropic.com/en/api/rate-limits",
+        "https://docs.anthropic.com/en/api/streaming",
+        "https://docs.anthropic.com/en/api/supported-regions",
+        "https://docs.anthropic.com/en/api/versioning",
     ]
 
     # Initialize a scraper
